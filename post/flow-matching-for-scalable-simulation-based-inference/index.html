@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GWPE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/media/mdui/css/mdui.min.css">
+    <link rel="stylesheet" href="/media/css/post.css">
+    <link rel="stylesheet" href="/media/live2d/css/live2d.css" />
+    
+</head>
+<body class=" mdui-appbar-with-toolbar  mdui-theme-primary-pink mdui-theme-accent-pink">
+<header class="mdui-toolbar mdui-color-pink mdui-appbar-fixed mdui-appbar-scroll-toolbar-hide" style="z-index: 1000">
+    <a href="javascript:;" mdui-drawer="{target: '#left-drawer',overlay:true}" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">menu</i></a>
+    <span class="mdui-typo-title">GWPE</span>
+    <div class="mdui-toolbar-spacer"></div>
+<!--    <a href="javascript:history.go(0);" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">search</i></a>-->
+    <a href="javascript:;" class="mdui-btn mdui-btn-icon"><i class="mdui-icon material-icons">more_vert</i></a>
+</header>
+
+<div class="mdui-drawer mdui-color-white mdui-drawer-full-height mdui-drawer-close" id="left-drawer">
+    <ul class="mdui-list">
+        <li class="mdui-subheader">菜单</li>
+        
+        <li class="mdui-list-item mdui-ripple">
+            <a href="/" class="mdui-list-item-content">首页</a>
+        </li>
+        
+        <li class="mdui-list-item mdui-ripple">
+            <a href="/archives" class="mdui-list-item-content">归档</a>
+        </li>
+        
+        <li class="mdui-list-item mdui-ripple">
+            <a href="/tags" class="mdui-list-item-content">标签</a>
+        </li>
+        
+        <li class="mdui-list-item mdui-ripple">
+            <a href="/post/about" class="mdui-list-item-content">关于</a>
+        </li>
+        
+    </ul>
+</div>
+
+<div id="content" class="site-content">
+    <div id="primary" class="content-area">
+        <main id="main" class="site-main" role="main">
+            <article id="post-1270" class="post-1270 post type-post status-publish format-standard hentry category-90 category-129 tag-149">
+                <header class="entry-header">
+                    <h1 class="entry-title">Flow Matching for Scalable Simulation-Based Inference</h1>
+                    <p class="entry-census">发布于 2023-08-10</p>
+                    <hr>
+                </header>
+                <div class="neko">
+                    <h1 id="flow-matching-for-scalable-simulation-based-inference">Flow Matching for Scalable Simulation-Based Inference</h1>
+<h2 id="abstract"><strong>Abstract</strong></h2>
+<p>​	基于离散归一化流的神经后验估计方法已成为基于模拟的推断（SBI）的成熟工具，但将它们扩展到高维问题可能具有挑战性。在生成建模方面的最新进展的基础上，我们在这里提出了流匹配后验估计（FMPE）技术，一种使用连续归一化流进行SBI的技术。与离散流不同，流匹配允许不受约束的架构，从而为复杂的数据形态提供增强的灵活性。因此，流匹配使得精确密度评估、快速训练和无缝扩展到大型架构成为可能，使其成为SBI的理想选择。我们展示FMPE在已建立的SBI基准上实现了竞争性能，并在一个具有挑战性的科学问题上展示了其改进的可扩展性：在引力波推断方面，FMPE在训练时间缩短30％且准确性显著提高的同时，胜过了基于可比较的离散流的方法。我们的工作强调了FMPE在具有挑战性的推断场景中提高性能的潜力，从而为在科学问题上实现更先进的应用铺平了道路。</p>
+<h2 id="1-introduction">1 Introduction</h2>
+<p>​	能够利用神经网络轻松地表示任意复杂性的贝叶斯后验将在科学数据分析领域引发一场革命。这些网络可以使用模拟数据进行训练，并用于跨观测的分摊推断，为众多科学模型带来可处理的推断速度和效率。得益于创新性的架构，如归一化流[1, 2]，近年来神经网络模拟推断（SBI）方法[3]取得了显着的进展。在这里，我们展示了现代深度生成建模方法（特别是流匹配）在适用于SBI时在简洁性、灵活性和可扩展性方面带来了显著的改进。</p>
+<figure data-type="image" tabindex="1"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810194014259.png" alt="image-20230810194014259" loading="lazy"></figure>
+<p><strong>图1</strong>：网络架构（左）和流轨迹（右）的比较。离散流（NPE，顶部）需要一种专门的架构来进行密度估计。连续流（FMPE，底部）基于一个由无约束架构参数化的向量场。FMPE利用这种额外的灵活性，更加强调对条件数据x的关注，在SBI环境中，这通常是高维且复杂领域的数据。此外，最优传输路径从基础分布（插图中）产生到目标分布，生成了简单的流轨迹。</p>
+<p>​	在数据分析中，贝叶斯方法是通过后验分布 p(θ|x) 比较观测和模型。这提供了我们对模型参数 θ 是如何导致观测 x 的信念程度，与模型似然 p(x|θ) 乘以先验 p(θ) 成正比。通常，我们有兴趣以一组样本的形式表示后验分布，然而通过标准的基于似然的算法来获取这些样本可能对于难以处理或昂贵的似然函数来说具有挑战性。在这种情况下，基于数据模拟 x ∼ p(x|θ) 的 SBI 提供了一种替代方法。结合深度生成建模，SBI 成为科学推断的一个强大范例。例如，神经后验估计（NPE）[4–6]训练一个条件密度估计器 q(θ|x) 来近似后验分布，允许对与训练分布一致的任何 x 进行快速采样和密度估计。</p>
+<p>​	NPE密度估计器 q(θ|x) 通常采用（离散）归一化流[1, 2]，这种方法在挑战性问题，如引力波推断[7]中，取得了最先进的性能。自然地，性能取决于 q(θ|x) 的表达能力。归一化流通过一系列基本变换将噪声转化为样本。这些变换经过精心设计，具有可逆性和简单的雅可比行列式，从而实现了高效的最大似然训练，同时产生了富有表现力的 q(θ|x)。虽然许多这样的离散流是通用的密度近似器[2]，但在实践中，它们在扩展到非常大的网络方面可能具有挑战性，而大数据实验需要这样的网络。</p>
+<p>​	近期的研究[8, 9]提出了神经后验分数估计（NPSE），这是一种相当不同的方法，它使用得分匹配（或扩散）网络对后验分布进行建模。这些技术最初是为了生成建模而开发的[10–12]，在许多领域，包括图像生成[13, 14]方面取得了最先进的结果。与离散归一化流类似，扩散模型将噪声转化为样本，但其轨迹由一个连续的“时间”参数 t 参数化。这些轨迹解决了一个随机微分方程[15]（SDE），该方程用一个向量场 vt 来定义，该向量场被训练以匹配中间分布 pt 的得分。与NPE相比，NPSE具有几个优点，包括在推断时能够结合多个观测[9]，而且重要的是，它具有使用无约束网络架构的自由。</p>
+<p>​	我们在这里提出使用流匹配，这是另一种用于生成建模的最新技术，用于贝叶斯推断，我们将其称为流匹配后验估计（FMPE）方法。流匹配也基于一个向量场 vt，因此也支持灵活的网络架构（图1）。然而，对于流匹配，vt直接定义了样本轨迹的速度场，这些轨迹解决普通微分方程（ODEs）并且是确定性的。因此，流匹配允许在设计非扩散路径（如最优传输）方面具有额外的自由度，并且可以直接访问密度[16]。这些差异在表1中总结。</p>
+<figure data-type="image" tabindex="2"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810194919107.png" alt="image-20230810194919107" loading="lazy"></figure>
+<p>我们的贡献如下：<br>
+• 我们将流匹配方法应用于贝叶斯推断，提出了FMPE方法。一般来说，SBI的建模要求与生成建模不同。对于后者，样本质量至关重要，即样本应位于复杂分布（例如图像）的支持上。相反，对于SBI，对于固定的x，p(θ|x)通常不太复杂，但x本身可以是复杂的和高维的。因此，我们考虑了从x到vt的金字塔状架构，使用门控线性单元来包含(θ，t)的依赖关系，而不是用于图像的典型U-Net结构（图1）。我们还提出了一种替代的t加权损失，可以在许多任务中提高性能。<br>
+• 在某些正则性假设下，我们证明了模型后验与目标后验之间KL散度的上界。这意味着估计的后验是质量覆盖的，即它们的支持包括与观察到的x一致的所有θ，这对于科学应用非常有价值[17]。<br>
+• 我们进行了一系列实验，以调查FMPE的性能。首先，在一组已建立的SBI基准测试上，我们展示FMPE在大多数任务中的表现与NPE相当，甚至更好，并且在所有情况下都表现出质量覆盖的后验（第4节）。然后，我们转向引力波推断这一具有挑战性的问题（第5节），在这里我们展示FMPE在训练时间、后验准确性以及扩展到更大网络方面都明显优于NPE基准。</p>
+<h2 id="2-preliminaries"><strong>2 Preliminaries</strong></h2>
+<p>​	<strong>归一化流</strong>。归一化流[1, 2]通过一个可逆映射 ψx: R^n → R^n，从一个简单的基础分布 q0(θ) 开始，定义了关于参数 θ ∈ R^n 的概率分布 q(θ|x)。</p>
+<figure data-type="image" tabindex="3"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810200728205.png" alt="image-20230810200728205" loading="lazy"></figure>
+<p>​	在这里，(·)∗ 表示推进算子，为了通用性，我们对额外的上下文 x ∈ R^m 进行了条件化。除非另有说明，归一化流是指离散流，其中 ψx 由一系列带有三角雅可比矩阵的较简单映射组成，并夹杂着对 θ 进行洗牌操作。这种构造产生了富有表现力的 q(θ|x) 同时也实现了高效的密度评估 [2]。</p>
+<p>​	<strong>连续归一化流</strong>。连续流[18]同样是从基础分布映射到目标分布，但是它由一个连续的“时间”参数 t ∈ [0, 1] 进行参数化，其中 q0(θ|x) = q0(θ) 且 q1(θ|x) = q(θ|x)。对于每个 t，流通过样本空间上的向量场 vt,x 来定义。这对应于样本轨迹的速度，</p>
+<figure data-type="image" tabindex="4"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810201238484.png" alt="image-20230810201238484" loading="lazy"></figure>
+<figure data-type="image" tabindex="5"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810201536157.png" alt="image-20230810201536157" loading="lazy"></figure>
+<p>​	连续流的优势在于 vt,x(θ) 可以通过一个将 R^n+m+1 → R^n 的神经网络来简单地指定，在这种情况下，式 (2) 被称为神经常微分方程（neural ODE）[18]。由于密度可以通过式 (3) 得到，原则上可以通过最大化（对数）似然来训练流。然而，在实践中，这通常是不可行的，因为采样和密度估计都需要多次网络传递来数值解决常微分方程（ODE）（式2）。</p>
+<p><strong>流匹配</strong>。连续归一化流的另一种训练目标是流匹配[16]。这直接将 vt,x 回归到生成目标概率路径 pt,x 的向量场 ut,x 上。这样做的好处是训练不需要积分常微分方程，然而如何选择 (ut,x, pt,x) 并不是立即清楚的。[16]的关键洞察是，如果路径是基于样本条件选择的，那么训练目标将变得非常简单。事实上，给定一个样本条件概率路径 pt(θ|θ1) 和相应的向量场 ut(θ|θ1)，我们将样本条件流匹配损失定义为：</p>
+<figure data-type="image" tabindex="6"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810201819093.png" alt="image-20230810201819093" loading="lazy"></figure>
+<p>值得注意的是，最小化这个损失等价于将 vt,x(θ) 回归到生成 pt(θ|x) 的边缘向量场 ut,x(θ) 上[16]。请注意，在这个表达式中，vt,x(θ) 的 x 依赖是通过期望值体现的，而样本条件的向量场则独立于 x。在选择样本条件路径时有相当大的自由度。文献[16]引入了高斯路径族。</p>
+<figure data-type="image" tabindex="7"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810201915974.png" alt="image-20230810201915974" loading="lazy"></figure>
+<p>其中时间相关的均值 µ_t(θ_1) 和标准差 σ_t(θ_1) 可以自由指定（受到边界条件的限制）。在我们的实验中，我们关注由 µ_t(θ_1) = tθ_1 和 σ_t(θ_1) = 1 - (1 - σ_{\text{min}})t（也在[16]中介绍）定义的最优传输路径。样本条件的向量场则具有简单的形式：</p>
+<figure data-type="image" tabindex="8"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810202038737.png" alt="image-20230810202038737" loading="lazy"></figure>
+<p>神经后验估计（NPE）。NPE是一种直接将密度估计器（通常是归一化流）与后验分布p(θ|x)进行拟合的SBI方法[4–6]。NPE使用最大似然目标 LNPE = -E_{p(θ)p(x|θ)} \log q(θ|x) 进行训练，使用贝叶斯定理将期望值 Ep(x)p(θ|x) 简化为 Ep(θ)p(x|θ)。在训练过程中，LNPE基于由样本 (θ, x) ∼ p(θ)p(x|θ) 构成的经验分布进行估计。一旦训练完成，NPE可以使用 q(θ|x) 对每个新的观测进行推断，从而将模拟和训练的计算成本在所有观测中分摊。NPE还可以对 q(θ|x) 进行精确的密度评估。这两个属性对于第5节中的物理应用至关重要，因此我们的目标是在FMPE中保留这些属性。</p>
+<h2 id="related-work"><strong>Related work</strong></h2>
+<p>​	Flow matching [16] 是作为生成模型的一种技术开发的，类似的技术在 [19–21] 中也有讨论，并在 [22, 23] 中进行了扩展。Flow matching 作为一种技术涵盖了确定性的常微分方程版本的扩散模型 [10–12] 作为一个特殊实例。尽管据我们所知，流匹配以前尚未应用于贝叶斯推断，但在 [8, 9] 中提出了用于SBI的分数匹配扩散模型，并取得了令人印象深刻的结果。然而，这些研究使用了基于随机微分方程（SDEs）[15]或朗之万步的随机公式，因此在需要对后验密度进行评估时（见表1）并不直接适用。值得注意的是，分数模型也可以通过ODE来参数化连续的归一化流。将 [8, 9] 扩展到确定性的公式也可以看作是流匹配的一个特殊情况。因此，我们在第3节中提供的许多分析和实际指导也适用于分数匹配。</p>
+<p>​	在这里，我们将重点比较 FMPE 与 NPE [4–6]，因为它最符合第5节中应用的需求。其他的SBI方法包括近似贝叶斯计算 [24–28]、神经似然估计 [29–32] 和神经比率估计 [33–38]。许多这些方法都有顺序版本，其中估计器网络专门针对特定的观测值 xo 进行调整。FMPE 具有可追踪的密度，因此可以直接将顺序 NPE [4–6] 的方法应用到 FMPE 上。在这种情况下，推断不再是分摊的，所以我们将这个扩展留给未来的工作。</p>
+<h2 id="3-flow-matching-posterior-estimation"><strong>3 Flow matching posterior estimation</strong></h2>
+<p>​	将流匹配应用于SBI时，我们使用贝叶斯定理在损失函数（4）中进行了通常的替换，即将 Ep(x)p(θ|x) 替换为 Ep(θ)p(x|θ)，从而消除了难以计算的期望值。这得到了 FMPE 的损失函数：</p>
+<figure data-type="image" tabindex="9"><img src="C:%5CUsers%5C89743%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20230810203919357.png" alt="image-20230810203919357" loading="lazy"></figure>
+<p>​	我们通过对样本 (θ, x) ∼ p(θ)p(x|θ) 进行经验风险最小化来最小化这个损失。换句话说，训练数据是通过从先验中抽样 θ，然后模拟对应于 θ 的数据 x 来生成的。这与NPE训练的过程非常相似，但是将最大似然对数替换为了样本条件的流匹配目标。需要注意的是，在这个表达式中，我们还从 p(t) 中抽样 t ∼ p(t)，其中 t ∈ [0, 1]（参见第3.3节），这个抽样也是对 (4) 中的均匀分布的推广。这为我们的实验提供了额外的自由度，以改善学习过程。<br>
+这个表达式描述了用于流匹配训练的损失函数的一部分，其中：</p>
+<ul>
+<li>Et∼p(t) 表示从分布 p(t) 中采样一个 t。</li>
+<li>θ1∼p(θ) 表示从先验分布 p(θ) 中采样一个参数 θ1。</li>
+<li>x∼p(x|θ1) 表示从给定参数 θ1 的条件分布 p(x|θ1) 中采样观测数据 x。</li>
+<li>θt∼pt(θt|θ1) 表示从在给定参数 θ1 和时间 t 下的条件分布 pt(θt|θ1) 中采样参数 θt。</li>
+<li>vt,x(θt) 表示在给定参数 θt 和观测数据 x 的条件下的向量场。</li>
+<li>ut(θt|θ1) 表示在给定参数 θ1 和时间 t 下的条件分布 pt(θt|θ1) 的向量场。</li>
+<li>∥vt,x(θt) − ut(θt|θ1)∥^2 表示两个向量场之间的欧氏距离的平方。</li>
+</ul>
+<p>这个损失函数的目标是最小化预测的向量场 vt,x(θt) 与目标向量场 ut(θt|θ1) 之间的距离的平方，从而让预测的向量场更好地匹配目标向量场。这个损失函数的最小化过程是流匹配方法的核心，通过调整模型的参数来逐步逼近目标向量场。</p>
+
+                </div>
+            </article>
+        </main>
+    </div>
+    <div class="doc-footer-nav mdui-color-theme">
+        <div class="mdui-container">
+            <div class="mdui-row">
+                
+                <div class="mdui-col-xs-2 mdui-col-sm-6 doc-footer-nav-left"></div>
+                
+                
+                <div class="mdui-col-xs-2 mdui-col-sm-6 doc-footer-nav-left"></div>
+                
+            </div>
+        </div>
+    </div>
+    <br>
+    
+    
+    <div id="vue_app">
+        <!--头像-->
+        <div class="mdui-card">
+            <!-- 卡片头部，包含头像、标题、副标题 -->
+            <div class="mdui-card-header">
+                <img style="cursor:pointer" @click="avatarOpen" class="mdui-card-header-avatar" :src="avatar"/>
+                <div class="mdui-card-header-title">评论列表</div>
+                <div class="mdui-card-header-subtitle"><-点击图标可以更换头像哦！！~~</div>
+            </div>
+        </div>
+        <br/>
+
+        <!--发表评论框-->
+        <reply @submit="replySubmit"></reply>
+
+        <!--评论列表-->
+        <div v-for="(v,k) in list">
+            <br>
+            <div class="mdui-card">
+                <!-- 卡片头部，包含头像、标题、副标题 -->
+                <div class="mdui-card-header">
+                    <img class="mdui-card-header-avatar" :src="v.attributes.img"/>
+                    <div v-if="v.attributes.website" class="mdui-text-color-theme mdui-card-header-title mdui-typo">
+                        <a target="view_window" :href="v.attributes.website">{{v.attributes.nickname}}</a>
+                        <span v-if="v.attributes.is_author" class="mdui-text-color-theme">（博主）</span>
+                    </div>
+                    <div v-else class="mdui-card-header-title">
+                        <span>{{v.attributes.nickname}}</span>
+                        <span v-if="v.attributes.is_author" class="mdui-text-color-theme">（博主）</span>
+                    </div>
+                    <div class="mdui-card-header-subtitle">{{time_format("Y年m月d日 H点s分",v.attributes.time)}}</div>
+                </div>
+
+                <!-- 卡片的内容 -->
+                <div class="mdui-card-content" v-html="v.attributes.txt"></div>
+
+                <div>
+                    <ul class="mdui-list" v-for="vv in JSON.parse(v.attributes.reply_son)">
+                        <li class="mdui-list-item">
+                            <div class="mdui-list-item-avatar"><img :src="vv.img"/></div>
+                            <div class="mdui-list-item-content"  style="height: auto">
+                                <div v-if="vv.website" class="mdui-list-item-title mdui-typo">
+                                    <a target="view_window" :href="vv.website" class="mdui-text-color-theme">{{vv.nickname}}</a>
+                                    <span v-if="vv.is_author" class="mdui-text-color-theme">（博主）</span>
+                                    <span class="mdui-typo-caption-opacity">{{time_format("Y年m月d日 H点s分",vv.time)}}</span>
+                                </div>
+                                <div v-else class="mdui-list-item-title">
+                                    {{vv.nickname}}
+                                    <span v-if="vv.is_author" class="mdui-text-color-theme">（博主）</span>
+                                    <span class="mdui-typo-caption-opacity">{{time_format("Y年m月d日 H点s分",vv.time)}}</span>
+                                </div>
+                                <div class="mdui-list-item-text mdui-typo">
+                                    <a v-if="vv.reply_website" :href="vv.reply_website" target="view_window" class="mdui-typo">@{{vv.reply_nickname}}</a>
+                                    <a v-else class="mdui-typo">@{{vv.reply_nickname}}</a>：
+                                    <span class="reply_son" v-html="vv.txt"></span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <button
+                                        @click="reply2(k,vv.id,vv.nickname,vv.email,vv.website)"
+                                        class="mdui-btn mdui-text-color-pink"
+                                >
+                                    回复
+                                </button>
+                            </div>
+                        </li>
+                        <li class="mdui-divider-inset mdui-m-y-0"></li>
+                    </ul>
+                </div>
+
+                <div class="mdui-card-actions">
+                    <button
+                            @click="reply2(k,v.id,v.attributes.nickname,v.attributes.email,v.attributes.website)"
+                            style="float:right "
+                            class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent"
+                    >
+                        回复
+                    </button>
+                </div>
+            </div>
+        </div>
+        <br/>
+        <div style="text-align:center" v-if="list.length!=0">
+            <button @click="loadMore" class="mdui-btn mdui-btn-raised mdui-ripple mdui-color-theme-accent">加载更多</button>
+        </div>
+
+        <!--回复的弹窗-->
+        <div class="mdui-dialog" id="reply_mode">
+            <div class="mdui-dialog-title">
+                <span>回复</span>
+                <span class="mdui-text-color-theme">@{{replyList.nickname}}</span>
+                <span style="float:right ">
+                    <button class="mdui-btn"  @click="reply2Close">取消回复</button>
+                </span>
+            </div>
+            <reply @submit="reply2Submit"/>
+        </div>
+
+        <!--选头像的弹窗-->
+        <div class="mdui-dialog" id="avatar_mode">
+            <div class="mdui-dialog-title">
+                选择头像
+                <span style="float:right ">
+                    <button class="mdui-btn"  @click="avatarClose">取消选择</button>
+                </span>
+            </div>
+            <avatar @choice="avatarChoice"></avatar>
+        </div>
+    </div>
+    <object data="/media/js/modular/reply/reply.html" width="0" height="0" id="reply_object"></object>
+    <object data="/media/js/modular/emoji/emoji.html" width="0" height="0" id="emoji_object"></object>
+    <object data="/media/js/modular/avatar/avatar.html" width="0" height="0" id="avatar_object"></object>
+    
+</div>
+<footer class="mdui-container footer ">
+<!--    <div class="head_card-offset"></div>-->
+    <div class="mdui-row mdui-row-gapless">
+        <div class="k-container">
+            <img width="100%" src="/media/img/skirt.png">
+        </div>
+    </div>
+
+    <div class="site-info">
+        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+    </div>
+</footer>
+<div id="landlord" style="left:5px;bottom:0px;">
+    <div class="message" style="opacity:0"></div>
+    <canvas id="live2d" width="500" height="560" class="live2d"></canvas>
+    <div class="live_talk_input_body">
+        <div class="live_talk_input_name_body">
+            <input name="name" type="text" class="live_talk_name white_input" id="AIuserName" autocomplete="off" placeholder="你的名字" />
+        </div>
+        <div class="live_talk_input_text_body">
+            <input name="talk" type="text" class="live_talk_talk white_input" id="AIuserText" autocomplete="off" placeholder="要和我聊什么呀？"/>
+            <button type="button" class="live_talk_send_btn" id="talk_send">发送</button>
+        </div>
+    </div>
+    <input name="live_talk" id="live_talk" value="1" type="hidden" />
+    <div class="live_ico_box">
+        <div class="live_ico_item type_info" id="showInfoBtn"></div>
+        <div class="live_ico_item type_talk" id="showTalkBtn"></div>
+        <div class="live_ico_item type_music" id="musicButton"></div>
+        <div class="live_ico_item type_youdu" id="youduButton"></div>
+        <div class="live_ico_item type_quit" id="hideButton"></div>
+        <input name="live_statu_val" id="live_statu_val" value="0" type="hidden" />
+        <audio src="" style="display:none;" id="live2d_bgm" data-bgm="0" preload="none"></audio>
+        <input name="live2dBGM" value="https://img.apa70.com/123.mp3" type="hidden">
+        <input name="live2dBGM" value="https://img.apa70.com/123.mp3" type="hidden">
+        <input id="duType" value="douqilai,l2d_caihong" type="hidden">
+    </div>
+</div>
+<div id="open_live2d">召唤伊斯特瓦尔</div>
+<script>
+    var message_Path = '/media/live2d/';//资源目录，如果目录不对请更改
+    var talkAPI = "";//如果有类似图灵机器人的聊天接口请填写接口路径
+</script>
+<!--<script src="/media/js/jquery-3.3.1.min.js"></script>-->
+<script src="//apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script type="text/javascript" src="/media/live2d/js/live2d.js"></script>
+<script type="text/javascript" src="/media/live2d/js/message.js"></script>
+
+</body>
+<script src="/media/mdui/js/mdui.min.js"></script>
+<script src="/media/layer/layer.js"></script>
+<script src="//cdn.jsdelivr.net/npm/leancloud-storage@4.11.1/dist/av-min.js"></script>
+<script src="//unpkg.com/vue@next"></script>
+<script>
+    
+    //初始化leancloud的SDK
+    AV.init({
+        appId: "",
+        appKey: "",
+        serverURL: ""
+    });
+    
+</script>
+<script type="module" src="/media/js/post.js"></script>
+</html>
